@@ -7,10 +7,10 @@ import sys
 
 imageWidth = 400
 imageHeight = 400
-inputFile = '8398873_3862879.svg'
+#inputFile = '8398873_3862879.svg'
 #inputFile = '23672634_6829620.svg'
 #inputFile = '13900614_5367491.svg'
-#inputFile = '4948955_94190.svg'
+inputFile = '4948955_94190.svg'
 gridItems = [[]]
 
 modifyPosition = True
@@ -90,7 +90,7 @@ class Main(QWidget):
 
     def __init__(self, parent=None):
         super(Main, self).__init__(parent)
-
+        self.setWindowTitle("SVG Alchemist")
         self.setGeometry(0, 0, 1100, 1100)
         
         # Add three checkboxes for modifying position, orientation, and size
@@ -113,7 +113,6 @@ class Main(QWidget):
         
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(self.topWidget)
-        #main_layout.addLayout(self.top_layout)
         main_layout.addLayout(self.bottom_layout)
 
         # Set the size policy to allow the window to be resizable
