@@ -1,7 +1,7 @@
 import SVGrandomizer
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QDesktopWidget, QCheckBox, QVBoxLayout, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QDesktopWidget, QCheckBox, QVBoxLayout, QSizePolicy, QHBoxLayout
 from numpy import interp
 import sys
 
@@ -80,6 +80,7 @@ class GridItem(QWidget):
         self.widgetSvg.repaint()
         print("loaded SVG " + str(self.row) + " " + str(self.col))
 
+
 # We havea  grid of size numRows x numCols
 # imagePickProbability is on the X axis - on left 0, on right 1
 # imageSimilarity is on the Y axis - on top 1, on right 0
@@ -103,8 +104,17 @@ class Main(QWidget):
         self.sizeCheckbox.checkbox.stateChanged.connect(self.toggleModifySize)
 
         # Create a grid of widgets
-        self.grid_layout = QGridLayout(self)
-        self.generateGrid()
+        self.topWidget = QWidget()
+        self.topWidget.setFixedHeight(50)
+        self.top_layout = QHBoxLayout(self.topWidget)
+        self.bottom_layout = QGridLayout()
+        self.generateTopGrid()
+        self.generateBottomGrid()
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.addWidget(self.topWidget)
+        #main_layout.addLayout(self.top_layout)
+        main_layout.addLayout(self.bottom_layout)
 
         # Set the size policy to allow the window to be resizable
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -121,19 +131,43 @@ class Main(QWidget):
         global modifySize
         modifySize = state == Qt.Checked
 
-    def generateGrid(self):
-        screen = QDesktopWidget().screenGeometry()
-        screen_width, screen_height = screen.width(), screen.height()
+    def resizeEvent(self, event):
+        self.regenerateLayouts()
 
-        # Add the checkbox widget to the top
-        self.grid_layout.addWidget(self.positionCheckbox, 0, 0)
-        self.grid_layout.addWidget(self.orientationCheckbox, 0, 1)
-        self.grid_layout.addWidget(self.sizeCheckbox, 0, 2)
+    def regenerateLayouts(self):
+        self.clearLayout(self.top_layout)
+        self.clearLayout(self.bottom_layout)
+        self.generateTopGrid()
+        self.generateBottomGrid()
+
+    def clearLayout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+
+    def generateTopGrid(self):
+        self.top_layout.addWidget(self.positionCheckbox)
+        self.top_layout.addWidget(self.orientationCheckbox)
+        self.top_layout.addWidget(self.sizeCheckbox)
+        
+    def generateBottomGrid(self):
+        screen_width, screen_height = self.width(), self.height()
+
+        portraitMargin = 30
+        # portrait
+        if screen_width < screen_height:
+            global numCols, numRows
+            numRows = 3
+            numCols = 2
+            portraitMargin = 15
 
         global imageWidth, imageHeight
         margin = 30
         imageWidth = (screen_width - (numCols - 1) * margin) // numCols
-        imageHeight = (screen_height - (numRows - 1) * margin) // numRows - margin 
+        imageHeight = (screen_height - (numRows - 1) * margin) // numRows - portraitMargin
 
         global gridItems
         gridItems = [[GridItem(self) for col in range(numCols)] for row in range(numRows)]
@@ -146,7 +180,7 @@ class Main(QWidget):
                 imagePickProbability = interp(row + 0.7, [0, numRows], [0, 1])
                 imageSimilarity = interp(col + 0.5, [0, numCols], [1, 0])
                 widget.SetImageParameters(imagePickProbability, imageSimilarity)
-                self.grid_layout.addWidget(widget, row + 1 - portraitMode, col)
+                self.bottom_layout.addWidget(widget, row + 1, col)
 
 
 if __name__ == "__main__":
