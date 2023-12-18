@@ -1,20 +1,25 @@
 import SVGrandomizer
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QDesktopWidget, QCheckBox, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QDesktopWidget, QCheckBox, QVBoxLayout, QSizePolicy
 from numpy import interp
 import sys
 
-numRows = 2
-numCols = 3
 imageWidth = 400
 imageHeight = 400
-inputFile = '4948955_94190.svg'
+inputFile = '8398873_3862879.svg'
+#inputFile = '23672634_6829620.svg'
+#inputFile = '13900614_5367491.svg'
+#inputFile = '4948955_94190.svg'
 gridItems = [[]]
 
 modifyPosition = True
 modifyRotation = True
 modifySize = True
+
+numRows = 2
+numCols = 3
+
 
 class CheckboxWidget(QWidget):
     def __init__(self, label, initialValue=True, parent=None):
@@ -24,13 +29,15 @@ class CheckboxWidget(QWidget):
         
         # Style the checkbox
         self.checkbox.setStyleSheet(
-            "QCheckBox { font-size: 8px; }"
+            "QCheckBox { font-size: 8px; background-color: white ; border-radius: 2px; font: Serif;}"
             "QCheckBox::indicator { width: 12px; height: 12px; }"
         )
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.checkbox)
         self.setLayout(layout)
+
+        
 
 # For the visualization - it is best to use a square size of the grid (so the images looks better)
 class GridItem(QWidget):
@@ -99,11 +106,8 @@ class Main(QWidget):
         self.grid_layout = QGridLayout(self)
         self.generateGrid()
 
-        # Add the checkbox widget to the layout
-        self.grid_layout.addWidget(self.positionCheckbox, numRows, 0)
-        self.grid_layout.addWidget(self.orientationCheckbox, numRows, 1)
-        self.grid_layout.addWidget(self.sizeCheckbox, numRows, 2)
-
+        # Set the size policy to allow the window to be resizable
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
     def toggleModifyPosition(self, state):
         global modifyPosition
@@ -118,15 +122,14 @@ class Main(QWidget):
         modifySize = state == Qt.Checked
 
     def generateGrid(self):
-        # Clear existing items from the layout
-        for i in reversed(range(self.grid_layout.count())):
-            item = self.grid_layout.takeAt(i)
-            if item.widget():
-                item.widget().deleteLater()
-
         screen = QDesktopWidget().screenGeometry()
         screen_width, screen_height = screen.width(), screen.height()
-        
+
+        # Add the checkbox widget to the top
+        self.grid_layout.addWidget(self.positionCheckbox, 0, 0)
+        self.grid_layout.addWidget(self.orientationCheckbox, 0, 1)
+        self.grid_layout.addWidget(self.sizeCheckbox, 0, 2)
+
         global imageWidth, imageHeight
         margin = 30
         imageWidth = (screen_width - (numCols - 1) * margin) // numCols
@@ -143,7 +146,7 @@ class Main(QWidget):
                 imagePickProbability = interp(row + 0.7, [0, numRows], [0, 1])
                 imageSimilarity = interp(col + 0.5, [0, numCols], [1, 0])
                 widget.SetImageParameters(imagePickProbability, imageSimilarity)
-                self.grid_layout.addWidget(widget, row, col)
+                self.grid_layout.addWidget(widget, row + 1 - portraitMode, col)
 
 
 if __name__ == "__main__":

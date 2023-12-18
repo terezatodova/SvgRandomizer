@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
 import random
-import Visualization
 from svglib.svglib import svg2rlg
 from numpy import interp
 
@@ -32,8 +31,7 @@ def changeSize(element, key, modification, dimension):
     newSize = interp(newSize, [0, dimension], [0, dimension])
     element.set(key, str(newSize))
 
-# Randomize the position of circles and rectangles slightly
-# Would like to extend this to randomize also paths and other elements
+# Randomize the position of the objects
 # Keep the shape in bounds
 def positionRandomize(element):
     xModification = width * (1 - imageSimiliarity)
@@ -49,14 +47,13 @@ def positionRandomize(element):
         changePosition(element, 'y', yModification, height)
 
     elif 'polygon' in element.tag or 'path' in element.tag:
-        # we need to transform all of the polygon points
         translateX = random.uniform(-xModification, xModification)
         translateY = random.uniform(-yModification, yModification)
         element.set('transform', f"translate({translateX}, {translateY})")
 
-# todo resize / transform
+# Randomize the size of the objects
 def resize(element):
-    newSize = random.uniform(0.5, 2)
+    newSize = random.uniform(0.5, 2.5)
 
     if 'transform' in element.attrib:
         element.set('transform', f"{element.get('transform')} scale({newSize}, {newSize})")
@@ -79,8 +76,9 @@ def DoNotModifyElement(element):
         currWidth = float(element.get('width', 0)) + 10
         currHeight = float(element.get('height', 0)) + 10
 
-        return x <= 0 and y <= 0 and currWidth >= width and currHeight >= height
-    
+        #return x <= 0 and y <= 0 and currWidth >= width and currHeight >= height
+        return True
+        
     elementTypes = ['circle', 'ellipse', 'rect', 'polygon', 'path']
 
     for elementType in elementTypes:
@@ -105,11 +103,6 @@ def createSVGFile(inputFile, outputFile, inImagePickProbability, inImageSimiliar
     for element in svgRoot.iter():
         if (DoNotModifyElement(element)):
             continue
-
-        # background
-        if 'rect' in element.tag:
-            if (element.get('x') == None or element.get('y')  == None):
-                continue
     
         if not pickObject():
             continue
